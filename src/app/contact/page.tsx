@@ -47,9 +47,9 @@ export default function ContactPage() {
             src="/background-section-main.webp"
             alt="Art background"
             fill
-            className="object-cover opacity-30"
+            className="object-cover opacity-45"
           />
-          <div suppressHydrationWarning className="absolute inset-0 bg-stone-900/70" />
+          <div suppressHydrationWarning className="absolute inset-0 bg-stone-900/20" />
         </div>
         <div suppressHydrationWarning className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <span className="text-amber-400 text-sm font-medium uppercase tracking-widest">

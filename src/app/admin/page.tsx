@@ -12,14 +12,14 @@ import {
   FileText, TrendingUp, ShoppingCart, ExternalLink,
   Hash, Calendar, Truck, MessageSquare,
 } from "lucide-react";
-import { ARTWORKS as INITIAL_ARTWORKS, ORDER_STATUSES, type Artwork } from "@/lib/data";
+import { ORDER_STATUSES, type Artwork } from "@/lib/data";
 import { formatPrice, formatDate } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useSettingsStore, DEFAULT_SETTINGS, type SiteSettings } from "@/lib/siteSettings";
-import { useOrdersStore, type Order } from "@/lib/store";
+import { useOrdersStore, useArtworkStore, type Order } from "@/lib/store";
 import { sendEmail } from "@/lib/email";
 
 const ADMIN_EMAIL    = "paintbymahi@gmail.com";
@@ -391,7 +391,7 @@ export default function AdminPage() {
   const [authed, setAuthed]         = useState(false);
   const [mounted, setMounted]       = useState(false);
   const [tab, setTab]               = useState<AdminTab>("dashboard");
-  const [artworks, setArtworks]     = useState(INITIAL_ARTWORKS);
+  const { artworks, hydrate: hydrateArtworks, addArtwork, updateArtwork, removeArtwork } = useArtworkStore();
   const [formTarget, setFormTarget] = useState<Partial<Artwork>|null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Artwork|null>(null);
   const [artSearch, setArtSearch]   = useState("");
@@ -408,6 +408,7 @@ export default function AdminPage() {
     setAuthed(ok);
     hydrateSettings();
     hydrateOrders();
+    hydrateArtworks();
     setMounted(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -477,7 +478,7 @@ export default function AdminPage() {
       {/* Artwork form modal */}
       {formTarget !== null && (
         <ArtworkForm initial={formTarget} onClose={()=>setFormTarget(null)}
-          onSave={a=>{ setArtworks(p=>formTarget?.id?p.map(x=>x.id===a.id?a:x):[a,...p]); setFormTarget(null); }} />
+          onSave={a=>{ if (formTarget?.id) { updateArtwork(a); } else { addArtwork(a); } setFormTarget(null); }} />
       )}
 
       {/* Delete confirm */}
@@ -489,7 +490,7 @@ export default function AdminPage() {
             <p className="text-stone-500 text-sm mb-5">&ldquo;{deleteTarget.title}&rdquo; will be permanently removed.</p>
             <div className="flex gap-3">
               <Button variant="outline" className="flex-1" onClick={()=>setDeleteTarget(null)}>Cancel</Button>
-              <Button className="flex-1 bg-red-600 hover:bg-red-700 text-white" onClick={()=>{setArtworks(p=>p.filter(a=>a.id!==deleteTarget.id));setDeleteTarget(null);}}>Delete</Button>
+              <Button className="flex-1 bg-red-600 hover:bg-red-700 text-white" onClick={()=>{ removeArtwork(deleteTarget.id); setDeleteTarget(null); }}>Delete</Button>
             </div>
           </div>
         </div>

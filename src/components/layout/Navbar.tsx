@@ -100,7 +100,7 @@ export default function Navbar() {
   return (
     <>
       {/* Top bar */}
-      <div className="bg-amber-900 text-amber-100 text-xs py-1.5 text-center tracking-wide hidden md:block">
+      <div className="bg-[#1a0d10] text-[#e8b4b8] text-xs py-1.5 text-center tracking-wide hidden md:block">
         {announcementText} &nbsp;|&nbsp;
         <a href={`tel:${announcementPhone}`} className="hover:text-white underline">
           {announcementPhone}
@@ -112,8 +112,8 @@ export default function Navbar() {
         className={cn(
           "sticky top-0 z-50 w-full transition-all duration-300",
           scrolled
-            ? "bg-white/95 backdrop-blur-md shadow-md"
-            : "bg-white border-b border-stone-200"
+            ? "bg-[#fdf6f0]/95 backdrop-blur-md shadow-lg shadow-[#b76e79]/10"
+            : "bg-[#fdf6f0] border-b border-[#e8d0cc]"
         )}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -132,10 +132,10 @@ export default function Navbar() {
                 />
               </div>
               <div className="leading-none">
-                <span className="block font-bold text-lg text-amber-900 tracking-tight">
+                <span className="block font-bold text-lg text-[#1a0d10] tracking-tight">
                   Paint by Mahi
                 </span>
-                <span className="block text-xs text-stone-500 tracking-widest uppercase">
+                <span className="block text-xs text-[#b76e79] tracking-widest uppercase">
                   Fine Art Gallery
                 </span>
               </div>
@@ -148,10 +148,10 @@ export default function Navbar() {
                   key={link.href}
                   href={link.href}
                   className={cn(
-                    "px-3 py-2 rounded-md text-sm font-medium transition-colors",
+                    "px-3 py-2 rounded-full text-sm font-medium transition-all",
                     pathname === link.href
-                      ? "text-amber-800 bg-amber-50"
-                      : "text-stone-600 hover:text-amber-800 hover:bg-amber-50"
+                      ? "text-[#b76e79] bg-[#f5e6da]"
+                      : "text-[#2d1a1f]/70 hover:text-[#b76e79] hover:bg-[#f5e6da]"
                   )}
                 >
                   {link.label}
@@ -165,7 +165,7 @@ export default function Navbar() {
               {/* Search */}
               <button
                 onClick={() => setSearchOpen(!searchOpen)}
-                className="p-2 rounded-md text-stone-600 hover:text-amber-800 hover:bg-amber-50 transition-colors"
+                className="p-2 rounded-full text-[#2d1a1f]/60 hover:text-[#b76e79] hover:bg-[#f5e6da] transition-colors"
                 aria-label="Search"
               >
                 <Search className="w-5 h-5" />
@@ -174,12 +174,12 @@ export default function Navbar() {
               {/* Wishlist */}
               <Link
                 href="/wishlist"
-                className="relative p-2 rounded-md text-stone-600 hover:text-amber-800 hover:bg-amber-50 transition-colors"
+                className="relative p-2 rounded-full text-[#2d1a1f]/60 hover:text-[#b76e79] hover:bg-[#f5e6da] transition-colors"
                 aria-label="Wishlist"
               >
                 <Heart className="w-5 h-5" />
                 {wishlistCount > 0 && (
-                  <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                  <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-[#b76e79] text-white text-[10px] font-bold rounded-full flex items-center justify-center">
                     {wishlistCount > 9 ? "9+" : wishlistCount}
                   </span>
                 )}
@@ -197,7 +197,7 @@ export default function Navbar() {
                     >
                       <div
                         className={cn(
-                          "w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-sm ring-2 ring-amber-300",
+                          "w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-sm ring-2 ring-[#e8b4b8]",
                           avatarColor(user.name)
                         )}
                         title={user.name}
@@ -214,48 +214,32 @@ export default function Navbar() {
 
                     {/* Dropdown */}
                     {dropdownOpen && (
-                      <div className="absolute right-0 top-full mt-2 w-56 bg-white rounded-xl shadow-xl border border-stone-200 overflow-hidden z-50">
+                      <div className="absolute right-0 top-full mt-2 w-56 bg-[#fdf6f0] rounded-2xl shadow-xl border border-[#e8d0cc] overflow-hidden z-50">
                         {/* User info header */}
-                        <div className="px-4 py-3 border-b border-stone-100 bg-amber-50">
+                        <div className="px-4 py-3 border-b border-[#e8d0cc] bg-[#f5e6da]">
                           <div className="flex items-center gap-2.5">
-                            <div
-                              className={cn(
-                                "w-9 h-9 rounded-full flex items-center justify-center text-white text-sm font-bold shrink-0",
-                                avatarColor(user.name)
-                              )}
-                            >
+                            <div className={cn("w-9 h-9 rounded-full flex items-center justify-center text-white text-sm font-bold shrink-0", avatarColor(user.name))}>
                               {getInitials(user.name)}
                             </div>
                             <div className="min-w-0">
-                              <p className="font-semibold text-stone-800 text-sm truncate">{user.name}</p>
-                              <p className="text-xs text-stone-500 truncate">{user.email}</p>
+                              <p className="font-semibold text-[#1a0d10] text-sm truncate">{user.name}</p>
+                              <p className="text-xs text-[#b76e79] truncate">{user.email}</p>
                             </div>
                           </div>
                         </div>
-
-                        {/* Menu items */}
                         <div className="py-1">
-                          <Link
-                            href="/wishlist"
-                            onClick={() => setDropdownOpen(false)}
-                            className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-stone-700 hover:bg-amber-50 hover:text-amber-800 transition-colors"
-                          >
+                          <Link href="/wishlist" onClick={() => setDropdownOpen(false)}
+                            className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-[#2d1a1f]/80 hover:bg-[#f5e6da] hover:text-[#b76e79] transition-colors">
                             <Heart className="w-4 h-4" /> My Wishlist
                           </Link>
-                          <Link
-                            href="/cart"
-                            onClick={() => setDropdownOpen(false)}
-                            className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-stone-700 hover:bg-amber-50 hover:text-amber-800 transition-colors"
-                          >
+                          <Link href="/cart" onClick={() => setDropdownOpen(false)}
+                            className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-[#2d1a1f]/80 hover:bg-[#f5e6da] hover:text-[#b76e79] transition-colors">
                             <Package className="w-4 h-4" /> My Orders
                           </Link>
                         </div>
-
-                        <div className="border-t border-stone-100 py-1">
-                          <button
-                            onClick={handleLogout}
-                            className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors"
-                          >
+                        <div className="border-t border-[#e8d0cc] py-1">
+                          <button onClick={handleLogout}
+                            className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 transition-colors">
                             <LogOut className="w-4 h-4" /> Sign Out
                           </button>
                         </div>
@@ -266,7 +250,7 @@ export default function Navbar() {
                   /* Not logged in: plain user icon → goes to login */
                   <Link
                     href="/login"
-                    className="p-2 rounded-md text-stone-600 hover:text-amber-800 hover:bg-amber-50 transition-colors"
+                    className="p-2 rounded-full text-[#2d1a1f]/60 hover:text-[#b76e79] hover:bg-[#f5e6da] transition-colors"
                     aria-label="Account"
                   >
                     <User className="w-5 h-5" />
@@ -277,12 +261,12 @@ export default function Navbar() {
               {/* Cart */}
               <Link
                 href="/cart"
-                className="relative p-2 rounded-md text-stone-600 hover:text-amber-800 hover:bg-amber-50 transition-colors"
+                className="relative p-2 rounded-full text-[#2d1a1f]/60 hover:text-[#b76e79] hover:bg-[#f5e6da] transition-colors"
                 aria-label="Cart"
               >
                 <ShoppingCart className="w-5 h-5" />
                 {totalItems > 0 && (
-                  <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-amber-700 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                  <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-[#1a0d10] text-white text-[10px] font-bold rounded-full flex items-center justify-center">
                     {totalItems > 9 ? "9+" : totalItems}
                   </span>
                 )}
@@ -290,7 +274,7 @@ export default function Navbar() {
 
               {/* Mobile menu toggle */}
               <button
-                className="lg:hidden p-2 rounded-md text-stone-600 hover:text-amber-800 hover:bg-amber-50 transition-colors ml-1"
+                className="lg:hidden p-2 rounded-full text-[#2d1a1f]/60 hover:text-[#b76e79] hover:bg-[#f5e6da] transition-colors ml-1"
                 onClick={() => setMobileOpen(!mobileOpen)}
                 aria-label="Toggle menu"
               >
@@ -312,16 +296,12 @@ export default function Navbar() {
                 className="flex gap-2"
               >
                 <input
-                  autoFocus
-                  type="text"
-                  value={searchQuery}
+                  autoFocus type="text" value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search artworks, categories..."
-                  className="flex-1 h-10 px-4 rounded-md border border-stone-300 text-sm focus:outline-none focus:ring-2 focus:ring-amber-700"
+                  className="flex-1 h-10 px-4 rounded-full border border-[#e8d0cc] text-sm focus:outline-none focus:ring-2 focus:ring-[#b76e79] bg-[#faf0e6]"
                 />
-                <Button type="submit" size="sm" variant="gold">
-                  Search
-                </Button>
+                <Button type="submit" size="sm" variant="gold">Search</Button>
               </form>
             </div>
           )}
@@ -329,54 +309,41 @@ export default function Navbar() {
 
         {/* Mobile menu */}
         {mobileOpen && (
-          <div className="lg:hidden border-t border-stone-100 bg-white px-4 pb-4 pt-2">
+          <div className="lg:hidden border-t border-[#e8d0cc] bg-[#fdf6f0] px-4 pb-4 pt-2">
             <nav className="flex flex-col gap-1">
               {NAV_LINKS.map((link) => (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  className={cn(
-                    "px-3 py-2.5 rounded-md text-sm font-medium transition-colors",
+                <Link key={link.href} href={link.href}
+                  className={cn("px-3 py-2.5 rounded-full text-sm font-medium transition-colors",
                     pathname === link.href
-                      ? "text-amber-800 bg-amber-50"
-                      : "text-stone-600 hover:text-amber-800 hover:bg-amber-50"
-                  )}
-                >
-                  {link.label}
-                </Link>
+                      ? "text-[#b76e79] bg-[#f5e6da]"
+                      : "text-[#2d1a1f]/70 hover:text-[#b76e79] hover:bg-[#f5e6da]"
+                  )}>{link.label}</Link>
               ))}
-
-              {/* Mobile user section */}
               {hydrated && (
                 user ? (
-                  <div className="mt-2 pt-2 border-t border-stone-100">
+                  <div className="mt-2 pt-2 border-t border-[#e8d0cc]">
                     <div className="flex items-center gap-2.5 px-3 py-2 mb-1">
                       <div className={cn("w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0", avatarColor(user.name))}>
                         {getInitials(user.name)}
                       </div>
                       <div className="min-w-0">
-                        <p className="font-semibold text-stone-800 text-sm truncate">{user.name}</p>
-                        <p className="text-xs text-stone-500 truncate">{user.email}</p>
+                        <p className="font-semibold text-[#1a0d10] text-sm truncate">{user.name}</p>
+                        <p className="text-xs text-[#b76e79] truncate">{user.email}</p>
                       </div>
                     </div>
-                    <button
-                      onClick={handleLogout}
-                      className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-md transition-colors"
-                    >
+                    <button onClick={handleLogout}
+                      className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-500 hover:bg-red-50 rounded-full transition-colors">
                       <LogOut className="w-4 h-4" /> Sign Out
                     </button>
                   </div>
                 ) : (
-                  <Link
-                    href="/login"
-                    className="mt-2 pt-2 border-t border-stone-100 flex items-center gap-2 px-3 py-2.5 text-sm font-medium text-amber-800 hover:bg-amber-50 rounded-md transition-colors"
-                  >
+                  <Link href="/login"
+                    className="mt-2 pt-2 border-t border-[#e8d0cc] flex items-center gap-2 px-3 py-2.5 text-sm font-medium text-[#b76e79] hover:bg-[#f5e6da] rounded-full transition-colors">
                     <User className="w-4 h-4" /> Sign In / Register
                   </Link>
                 )
               )}
-
-              <div className="mt-2 pt-2 border-t border-stone-100 flex items-center gap-2 text-xs text-stone-500">
+              <div className="mt-2 pt-2 border-t border-[#e8d0cc] flex items-center gap-2 text-xs text-[#2d1a1f]/50">
                 <Phone className="w-3 h-3" />
                 <a href={`tel:${announcementPhone}`}>{announcementPhone}</a>
               </div>

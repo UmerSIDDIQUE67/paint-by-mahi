@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import type { Artwork } from "@/lib/data";
 
 // ---------------------------------------------------------------------------
 // Helpers – localStorage is only touched in the browser, never during SSR.
@@ -203,6 +204,57 @@ export const useOrdersStore = create<OrdersStore>((set, get) => ({
     writeLS(ORDERS_KEY, JSON.stringify(next));
   },
 }));
+
+const ARTWORKS_KEY = "pbm_artworks";
+
+type ArtworkStore = {
+  artworks: Artwork[];
+  hydrated: boolean;
+  hydrate: () => void;
+  setArtworks: (artworks: Artwork[]) => void;
+  addArtwork: (artwork: Artwork) => void;
+  updateArtwork: (artwork: Artwork) => void;
+  removeArtwork: (id: string) => void;
+};
+
+export const useArtworkStore = create<ArtworkStore>((set, get) => ({
+  artworks: typeof window === "undefined" ? [] : [] as Artwork[],
+  hydrated: false,
+  hydrate: () => {
+    if (get().hydrated) return;
+    const raw = readLS(ARTWORKS_KEY);
+    if (raw) {
+      try {
+        set({ artworks: JSON.parse(raw) as Artwork[] });
+      } catch {
+        // ignore invalid localStorage content
+      }
+    }
+    set({ hydrated: true });
+  },
+  setArtworks: (artworks) => {
+    set({ artworks });
+    writeLS(ARTWORKS_KEY, JSON.stringify(artworks));
+  },
+  addArtwork: (artwork) => {
+    const next = [artwork, ...get().artworks];
+    set({ artworks: next });
+    writeLS(ARTWORKS_KEY, JSON.stringify(next));
+  },
+  updateArtwork: (artwork) => {
+    const next = get().artworks.map((item) =>
+      item.id === artwork.id ? artwork : item
+    );
+    set({ artworks: next });
+    writeLS(ARTWORKS_KEY, JSON.stringify(next));
+  },
+  removeArtwork: (id) => {
+    const next = get().artworks.filter((item) => item.id !== id);
+    set({ artworks: next });
+    writeLS(ARTWORKS_KEY, JSON.stringify(next));
+  },
+}));
+
 export type UserSession = { name: string; email: string };
 
 type UserSessionStore = {
