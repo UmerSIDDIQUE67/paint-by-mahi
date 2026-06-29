@@ -1,16 +1,23 @@
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
 import Link from "next/link";
 import { Heart, ArrowRight } from "lucide-react";
-import { useWishlistStore } from "@/lib/store";
+import { useWishlistStore, useArtworkStore } from "@/lib/store";
 import { ARTWORKS } from "@/lib/data";
 import ArtworkCard from "@/components/artwork/ArtworkCard";
 import { Button } from "@/components/ui/button";
 
 export default function WishlistPage() {
   const { items } = useWishlistStore();
-  const wishlisted = ARTWORKS.filter((a) => items.includes(a.id));
+  const { artworks, hydrate } = useArtworkStore();
+
+  useEffect(() => {
+    hydrate();
+  }, [hydrate]);
+
+  const source = artworks.length ? artworks : ARTWORKS;
+  const wishlisted = source.filter((a) => items.includes(a.id));
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">

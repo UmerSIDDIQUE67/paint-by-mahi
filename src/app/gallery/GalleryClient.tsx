@@ -5,6 +5,8 @@ import { useSearchParams } from "next/navigation";
 import { SlidersHorizontal, X, LayoutGrid, List, Package } from "lucide-react";
 import ArtworkCard from "@/components/artwork/ArtworkCard";
 import { ARTWORKS, CATEGORIES } from "@/lib/data";
+import { useEffect } from "react";
+import { useArtworkStore } from "@/lib/store";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -27,8 +29,15 @@ export default function GalleryClient() {
   const [showFilters, setShowFilters] = useState(false);
   const [layout, setLayout] = useState<"grid" | "list">("grid");
 
+  const { artworks, hydrate } = useArtworkStore();
+
+  useEffect(() => {
+    hydrate();
+  }, [hydrate]);
+
   const filtered = useMemo(() => {
-    let result = [...ARTWORKS];
+    const source = artworks.length ? artworks : ARTWORKS;
+    let result = [...source];
 
     // Search
     if (search.trim()) {
@@ -83,7 +92,7 @@ export default function GalleryClient() {
     }
 
     return result;
-  }, [search, category, sortBy, priceRange]);
+  }, [search, category, sortBy, priceRange, artworks]);
 
   const clearFilters = () => {
     setSearch("");

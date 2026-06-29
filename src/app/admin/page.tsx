@@ -18,8 +18,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { useSettingsStore, DEFAULT_SETTINGS, type SiteSettings } from "@/lib/siteSettings";
-import { useOrdersStore, useArtworkStore, type Order } from "@/lib/store";
+import { useSettingsStore, type SiteSettings } from "@/lib/siteSettings";
+import { DEFAULT_SETTINGS } from "@/lib/defaultSettings";
+import { useOrdersStore, useArtworkStore, type Order, type ActiveUser } from "@/lib/store";
 import { sendEmail } from "@/lib/email";
 
 const ADMIN_EMAIL    = "paintbymahi@gmail.com";
@@ -400,8 +401,37 @@ export default function AdminPage() {
   const { settings, update: updateSettings, hydrate: hydrateSettings } = useSettingsStore();
   const [settingsForm, setSettingsForm] = useState<SiteSettings>(DEFAULT_SETTINGS);
   const [settingsSaved, setSettingsSaved] = useState(false);
+  const [apiStatus, setApiStatus] = useState<"checking" | "online" | "offline">("checking");
+  const [apiStatusMessage, setApiStatusMessage] = useState("Checking admin API...");
+  const [activeUsers, setActiveUsers] = useState<ActiveUser[]>([]);
 
   const { orders, updateStatus, updatePaymentCleared, hydrate: hydrateOrders } = useOrdersStore();
+
+  const checkApiStatus = async () => {
+    setApiStatus("checking");
+    setApiStatusMessage("Checking admin API...");
+
+    try {
+      const res = await fetch("/api/orders", { cache: "no-store" });
+      if (!res.ok) throw new Error("API returned bad status");
+      setApiStatus("online");
+      setApiStatusMessage("Admin API is online");
+    } catch {
+      setApiStatus("offline");
+      setApiStatusMessage("Unable to reach admin API");
+    }
+  };
+
+  const loadActiveUsers = async () => {
+    try {
+      const res = await fetch("/api/active-sessions", { cache: "no-store" });
+      if (!res.ok) throw new Error("Unable to load active users");
+      const data = (await res.json()) as ActiveUser[];
+      setActiveUsers(data);
+    } catch {
+      setActiveUsers([]);
+    }
+  };
 
   useEffect(() => {
     const ok = sessionStorage.getItem(ADMIN_SESSION_KEY) === "1";
@@ -409,7 +439,14 @@ export default function AdminPage() {
     hydrateSettings();
     hydrateOrders();
     hydrateArtworks();
+    checkApiStatus();
+    loadActiveUsers();
+    const interval = setInterval(() => {
+      checkApiStatus();
+      loadActiveUsers();
+    }, 30000);
     setMounted(true);
+    return () => clearInterval(interval);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -538,14 +575,26 @@ export default function AdminPage() {
         {/* DASHBOARD */}
         {tab==="dashboard" && (
           <div>
-            <h1 className="text-2xl font-bold text-stone-800 mb-2">Dashboard</h1>
-            <p className="text-stone-500 text-sm mb-6">Overview of your store activity</p>
+            <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-3">
+              <div>
+                <h1 className="text-2xl font-bold text-stone-800 mb-2">Dashboard</h1>
+                <p className="text-stone-500 text-sm">Overview of your store activity</p>
+              </div>
+              <div className="flex flex-wrap items-center gap-2 text-xs">
+                <span className={`inline-flex items-center rounded-full px-2.5 py-1 font-semibold ${apiStatus === "online" ? "bg-emerald-100 text-emerald-700" : apiStatus === "checking" ? "bg-amber-100 text-amber-700" : "bg-red-100 text-red-700"}`}>
+                  {apiStatus === "online" ? "API online" : apiStatus === "checking" ? "Checking API…" : "API offline"}
+                </span>
+                <span className="text-stone-500">{apiStatusMessage}</span>
+              </div>
+            </div>
+            <div className="mb-6"></div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
               {[
                 { label:"Confirmed Revenue", value:formatPrice(deliveredRevenue), sub:"From delivered orders", icon:TrendingUp, color:"text-green-600", bg:"bg-green-50" },
                 { label:"Total Orders", value:String(orders.length), sub:`${pending} pending`, icon:ShoppingBag, color:"text-blue-600", bg:"bg-blue-50" },
                 { label:"Artworks Listed", value:String(artworks.length), sub:"In gallery", icon:Package, color:"text-amber-600", bg:"bg-amber-50" },
                 { label:"Pending / New", value:String(pending), sub:"Need attention", icon:Clock, color:"text-red-600", bg:"bg-red-50" },
+                { label:"Active Users", value:String(activeUsers.length), sub:"Logged in now", icon:Users, color:"text-violet-600", bg:"bg-violet-50" },
               ].map(s=>(
                 <div key={s.label} className="bg-white rounded-xl p-5 shadow-sm border border-stone-200">
                   <div className="flex items-start justify-between mb-2">
@@ -586,6 +635,29 @@ export default function AdminPage() {
                 )}
               </div>
               <div className="bg-white rounded-xl shadow-sm border border-stone-200 p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="font-bold text-stone-800">Logged-in Visitors</h2>
+                  <button onClick={loadActiveUsers} className="text-sm text-amber-700 hover:underline">Refresh</button>
+                </div>
+                {activeUsers.length === 0 ? (
+                  <p className="text-stone-400 text-sm">No active user sessions found right now.</p>
+                ) : (
+                  <div className="grid gap-3">
+                    {activeUsers.slice(0, 4).map((user) => (
+                      <div key={user.email} className="rounded-2xl bg-stone-50 p-4 border border-stone-200">
+                        <div className="flex items-center justify-between gap-3">
+                          <div>
+                            <p className="font-semibold text-stone-800 text-sm">{user.name}</p>
+                            <p className="text-xs text-stone-500">{user.email}</p>
+                          </div>
+                          <p className="text-xs text-stone-500">{new Date(user.loginAt).toLocaleString()}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            <div className="bg-white rounded-xl shadow-sm border border-stone-200 p-6">
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="font-bold text-stone-800">Featured Artworks</h2>
                   <button onClick={()=>setTab("artworks")} className="text-sm text-amber-700 hover:underline">Manage all</button>

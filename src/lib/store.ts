@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { ARTWORKS } from "@/lib/data";
 import type { Artwork } from "@/lib/data";
 
 // ---------------------------------------------------------------------------
@@ -184,24 +185,73 @@ export const useOrdersStore = create<OrdersStore>((set, get) => ({
     const raw = readLS(ORDERS_KEY);
     const orders: Order[] = raw ? (JSON.parse(raw) as Order[]) : [];
     set({ orders, hydrated: true });
+
+    (async () => {
+      try {
+        const res = await fetch("/api/orders", { cache: "no-store" });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!Array.isArray(data.orders)) return;
+        set({ orders: data.orders });
+        writeLS(ORDERS_KEY, JSON.stringify(data.orders));
+      } catch {
+        // offline or API unavailable
+      }
+    })();
   },
 
   addOrder: (order) => {
     const next = [order, ...get().orders];
     set({ orders: next });
     writeLS(ORDERS_KEY, JSON.stringify(next));
+
+    (async () => {
+      try {
+        await fetch("/api/orders", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(order),
+        });
+      } catch {
+        // ignore network failures
+      }
+    })();
   },
 
   updateStatus: (id, status) => {
     const next = get().orders.map((o) => (o.id === id ? { ...o, status } : o));
     set({ orders: next });
     writeLS(ORDERS_KEY, JSON.stringify(next));
+
+    (async () => {
+      try {
+        await fetch("/api/orders", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id, status }),
+        });
+      } catch {
+        // ignore network failures
+      }
+    })();
   },
 
   updatePaymentCleared: (id, cleared) => {
     const next = get().orders.map((o) => (o.id === id ? { ...o, paymentCleared: cleared } : o));
     set({ orders: next });
     writeLS(ORDERS_KEY, JSON.stringify(next));
+
+    (async () => {
+      try {
+        await fetch("/api/orders", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id, paymentCleared: cleared }),
+        });
+      } catch {
+        // ignore network failures
+      }
+    })();
   },
 }));
 
@@ -223,14 +273,28 @@ export const useArtworkStore = create<ArtworkStore>((set, get) => ({
   hydrate: () => {
     if (get().hydrated) return;
     const raw = readLS(ARTWORKS_KEY);
+    let artworks = ARTWORKS;
     if (raw) {
       try {
-        set({ artworks: JSON.parse(raw) as Artwork[] });
+        artworks = JSON.parse(raw) as Artwork[];
       } catch {
-        // ignore invalid localStorage content
+        artworks = ARTWORKS;
       }
     }
-    set({ hydrated: true });
+    set({ artworks, hydrated: true });
+
+    (async () => {
+      try {
+        const res = await fetch("/api/artworks", { cache: "no-store" });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!Array.isArray(data.artworks)) return;
+        set({ artworks: data.artworks });
+        writeLS(ARTWORKS_KEY, JSON.stringify(data.artworks));
+      } catch {
+        // offline or API unavailable
+      }
+    })();
   },
   setArtworks: (artworks) => {
     set({ artworks });
@@ -240,6 +304,18 @@ export const useArtworkStore = create<ArtworkStore>((set, get) => ({
     const next = [artwork, ...get().artworks];
     set({ artworks: next });
     writeLS(ARTWORKS_KEY, JSON.stringify(next));
+
+    (async () => {
+      try {
+        await fetch("/api/artworks", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(artwork),
+        });
+      } catch {
+        // ignore network failures
+      }
+    })();
   },
   updateArtwork: (artwork) => {
     const next = get().artworks.map((item) =>
@@ -247,15 +323,38 @@ export const useArtworkStore = create<ArtworkStore>((set, get) => ({
     );
     set({ artworks: next });
     writeLS(ARTWORKS_KEY, JSON.stringify(next));
+
+    (async () => {
+      try {
+        await fetch("/api/artworks", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(artwork),
+        });
+      } catch {
+        // ignore network failures
+      }
+    })();
   },
   removeArtwork: (id) => {
     const next = get().artworks.filter((item) => item.id !== id);
     set({ artworks: next });
     writeLS(ARTWORKS_KEY, JSON.stringify(next));
+
+    (async () => {
+      try {
+        await fetch(`/api/artworks?id=${encodeURIComponent(id)}`, {
+          method: "DELETE",
+        });
+      } catch {
+        // ignore network failures
+      }
+    })();
   },
 }));
 
 export type UserSession = { name: string; email: string };
+export type ActiveUser = { name: string; email: string; loginAt: string; lastSeenAt: string };
 
 type UserSessionStore = {
   user: UserSession | null;
@@ -285,8 +384,14 @@ export const useUserStore = create<UserSessionStore>((set, get) => ({
   },
 
   logout: () => {
+    const user = get().user;
     if (typeof window !== "undefined") {
       sessionStorage.removeItem(SESSION_KEY);
+      if (user?.email) {
+        void fetch(`/api/active-sessions?email=${encodeURIComponent(user.email)}`, {
+          method: "DELETE",
+        });
+      }
     }
     set({ user: null });
   },

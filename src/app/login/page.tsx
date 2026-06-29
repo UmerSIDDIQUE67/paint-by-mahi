@@ -42,8 +42,14 @@ export default function LoginPage() {
     const users = getUsers();
     const user = users.find(u => u.email.toLowerCase() === form.email.toLowerCase() && u.password === form.password);
     if (user) {
-      sessionStorage.setItem(SESSION_KEY, JSON.stringify({ name: user.name, email: user.email }));
-      await sendEmail({ type: "welcome", to: user.email, name: user.name });
+      const session = { name: user.name, email: user.email };
+      sessionStorage.setItem(SESSION_KEY, JSON.stringify(session));
+      await sendEmail({ type: "login_success", to: user.email, name: user.name });
+      void fetch("/api/active-sessions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(session),
+      });
       router.push("/");
     } else {
       setError("Invalid email or password. Please try again.");
@@ -62,8 +68,16 @@ export default function LoginPage() {
     if (users.find(u => u.email.toLowerCase() === form.email.toLowerCase())) {
       setError("An account with this email already exists."); setLoading(false); return;
     }
-    saveUsers([...users, { name: form.name.trim(), email: form.email.trim().toLowerCase(), password: form.password }]);
-    sessionStorage.setItem(SESSION_KEY, JSON.stringify({ name: form.name.trim(), email: form.email.trim().toLowerCase() }));
+    const newUser = { name: form.name.trim(), email: form.email.trim().toLowerCase(), password: form.password };
+    saveUsers([...users, newUser]);
+    const session = { name: newUser.name, email: newUser.email };
+    sessionStorage.setItem(SESSION_KEY, JSON.stringify(session));
+    await sendEmail({ type: "welcome", to: session.email, name: session.name });
+    void fetch("/api/active-sessions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(session),
+    });
     router.push("/");
     setLoading(false);
   };

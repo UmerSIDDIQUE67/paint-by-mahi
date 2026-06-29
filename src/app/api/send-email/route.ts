@@ -1,12 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Resend } from "resend";
+import { readSettings } from "@/lib/serverData";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
-const FROM = process.env.RESEND_FROM_EMAIL || "onboarding@resend.dev";
+const DEFAULT_FROM = process.env.RESEND_FROM_EMAIL || "onboarding@resend.dev";
 const SITE = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
 
 export type EmailType =
   | "welcome"
+  | "login_success"
   | "order_confirmed"
   | "order_in_progress"
   | "order_completed"
@@ -80,6 +82,24 @@ function getEmailContent(payload: EmailPayload): { subject: string; html: string
             custom portraits, and more — each crafted with passion.
           </p>`,
           { text: "Explore the Gallery", href: `${SITE}/gallery` }
+        ),
+      };
+
+    case "login_success":
+      return {
+        subject: "Login Successful — Welcome Back!",
+        html: base(
+          "Login Successful",
+          `<p style="margin:0 0 12px;color:#57534e;font-size:15px;line-height:1.7;">
+            Hi ${name},
+          </p>
+          <p style="margin:0 0 12px;color:#57534e;font-size:15px;line-height:1.7;">
+            You have successfully logged in to Paint by Mahi.
+            You can continue browsing artwork, manage your wishlist, and place new orders.
+          </p>
+          <p style="margin:0 0 12px;color:#57534e;font-size:15px;line-height:1.7;">
+            If this wasn’t you, please contact us immediately.
+          </p>`
         ),
       };
 
@@ -193,19 +213,15 @@ export async function POST(req: NextRequest) {
     }
 
     const { subject, html } = getEmailContent(body);
-
-    // Resend free tier only allows sending to the account owner's verified email.
-    // We send to the admin email (paintbymahi@gmail.com) which is verified,
-    // so the artist always receives a copy. Once a custom domain is verified on
-    // Resend, remove the override below to send directly to body.to.
-    const ADMIN_EMAIL = process.env.RESEND_ADMIN_EMAIL || "paintbymahi@gmail.com";
-    const toAddress = ADMIN_EMAIL;
+    const settings = await readSettings();
+    const fromAddress = settings.contactEmail || DEFAULT_FROM;
+    const replyToAddress = settings.contactEmail || DEFAULT_FROM;
 
     const { error } = await resend.emails.send({
-      from: `Paint by Mahi <${FROM}>`,
-      to: toAddress,
-      replyTo: body.to,
-      subject: `[To: ${body.to}] ${subject}`,
+      from: `Paint by Mahi <${fromAddress}>`,
+      to: body.to,
+      replyTo: replyToAddress,
+      subject,
       html,
     });
 
