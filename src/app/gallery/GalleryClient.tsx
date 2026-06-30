@@ -1,11 +1,10 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { SlidersHorizontal, X, LayoutGrid, List, Package } from "lucide-react";
 import ArtworkCard from "@/components/artwork/ArtworkCard";
-import { ARTWORKS, CATEGORIES } from "@/lib/data";
-import { useEffect } from "react";
+import { CATEGORIES } from "@/lib/data";
 import { useArtworkStore } from "@/lib/store";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,14 +28,14 @@ export default function GalleryClient() {
   const [showFilters, setShowFilters] = useState(false);
   const [layout, setLayout] = useState<"grid" | "list">("grid");
 
-  const { artworks, hydrate } = useArtworkStore();
+  const { artworks, hydrated, hydrate } = useArtworkStore();
 
   useEffect(() => {
     hydrate();
   }, [hydrate]);
 
   const filtered = useMemo(() => {
-    const source = artworks.length ? artworks : ARTWORKS;
+    const source = hydrated ? artworks : [];
     let result = [...source];
 
     // Search
@@ -92,7 +91,7 @@ export default function GalleryClient() {
     }
 
     return result;
-  }, [search, category, sortBy, priceRange, artworks]);
+  }, [search, category, sortBy, priceRange, artworks, hydrated]);
 
   const clearFilters = () => {
     setSearch("");
@@ -103,6 +102,8 @@ export default function GalleryClient() {
 
   const hasActiveFilters =
     search || category !== "all" || sortBy !== "default" || priceRange[1] < 30000;
+
+  const source = hydrated ? artworks : [];
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -230,7 +231,7 @@ export default function GalleryClient() {
       <div className="flex items-center justify-between mb-6">
         <p className="text-stone-500 text-sm">
           Showing <span className="font-semibold text-stone-800">{filtered.length}</span>{" "}
-          of {ARTWORKS.length} artworks
+          of {source.length} artworks
         </p>
         {hasActiveFilters && (
           <button

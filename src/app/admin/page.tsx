@@ -302,7 +302,7 @@ function ArtworkForm({ initial, onSave, onClose }: {
 
   return (
     <div className="fixed inset-0 z-50 bg-black/60 flex items-start justify-center p-4 overflow-y-auto">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl my-8">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-full sm:max-w-2xl my-8">
         <div className="flex items-center justify-between p-6 border-b border-stone-200">
           <h2 className="text-xl font-bold text-stone-800">{isEdit?"Edit Artwork":"Add New Artwork"}</h2>
           <button onClick={onClose} className="p-2 rounded-lg hover:bg-stone-100"><X className="w-5 h-5 text-stone-500" /></button>
@@ -313,7 +313,7 @@ function ArtworkForm({ initial, onSave, onClose }: {
             <label className="block text-sm font-medium text-stone-700 mb-1.5">Title *</label>
             <Input value={form.title} onChange={e=>set("title",e.target.value)} placeholder="Artwork title" />
           </div>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-stone-700 mb-1.5">Category</label>
               <select value={form.category} onChange={e=>set("category",e.target.value)} className="w-full h-10 px-3 rounded-md border border-stone-300 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-amber-700">
@@ -325,7 +325,7 @@ function ArtworkForm({ initial, onSave, onClose }: {
               <Input value={form.medium} onChange={e=>set("medium",e.target.value)} placeholder="Oil on Canvas" />
             </div>
           </div>
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
               <label className="block text-sm font-medium text-stone-700 mb-1.5">Price (PKR) *</label>
               <Input type="number" min={0} value={form.price||""} onChange={e=>set("price",e.target.value)} placeholder="15000" />
@@ -407,21 +407,6 @@ export default function AdminPage() {
 
   const { orders, updateStatus, updatePaymentCleared, hydrate: hydrateOrders } = useOrdersStore();
 
-  const checkApiStatus = async () => {
-    setApiStatus("checking");
-    setApiStatusMessage("Checking admin API...");
-
-    try {
-      const res = await fetch("/api/orders", { cache: "no-store" });
-      if (!res.ok) throw new Error("API returned bad status");
-      setApiStatus("online");
-      setApiStatusMessage("Admin API is online");
-    } catch {
-      setApiStatus("offline");
-      setApiStatusMessage("Unable to reach admin API");
-    }
-  };
-
   const loadActiveUsers = async () => {
     try {
       const res = await fetch("/api/active-sessions", { cache: "no-store" });
@@ -436,6 +421,30 @@ export default function AdminPage() {
   useEffect(() => {
     const ok = sessionStorage.getItem(ADMIN_SESSION_KEY) === "1";
     setAuthed(ok);
+
+    const checkApiStatus = async () => {
+      try {
+        const res = await fetch("/api/settings", { cache: "no-store" });
+        if (!res.ok) throw new Error("Unable to reach admin API");
+        setApiStatus("online");
+        setApiStatusMessage("Admin API is online.");
+      } catch {
+        setApiStatus("offline");
+        setApiStatusMessage("Unable to reach admin API");
+      }
+    };
+
+    const loadActiveUsers = async () => {
+      try {
+        const res = await fetch("/api/active-sessions", { cache: "no-store" });
+        if (!res.ok) throw new Error("Unable to load active users");
+        const data = (await res.json()) as ActiveUser[];
+        setActiveUsers(data);
+      } catch {
+        setActiveUsers([]);
+      }
+    };
+
     hydrateSettings();
     hydrateOrders();
     hydrateArtworks();
@@ -447,8 +456,7 @@ export default function AdminPage() {
     }, 30000);
     setMounted(true);
     return () => clearInterval(interval);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [hydrateSettings, hydrateOrders, hydrateArtworks]);
 
   useEffect(() => { setSettingsForm(settings); }, [settings]);
 
@@ -498,7 +506,7 @@ export default function AdminPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-stone-100 flex">
+    <div className="min-h-screen bg-stone-100 flex flex-col lg:flex-row">
       {/* Order detail modal */}
       {selectedOrder && (
         <OrderDetailModal
@@ -534,8 +542,8 @@ export default function AdminPage() {
       )}
 
       {/* ── Sidebar ── */}
-      <aside className="w-56 bg-stone-900 text-white flex flex-col shrink-0">
-        <div className="p-4 border-b border-stone-800">
+      <aside className="w-full lg:w-56 bg-stone-900 text-white flex flex-col shrink-0 border-b border-stone-800 lg:border-b-0 lg:border-r lg:border-stone-800">
+        <div className="p-4 border-b border-stone-800 lg:border-b lg:border-stone-800">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-full overflow-hidden border border-amber-700 shrink-0">
               <Image src="/logo.jpeg" alt="Logo" width={32} height={32} className="w-full h-full object-cover" />
@@ -611,7 +619,7 @@ export default function AdminPage() {
             </div>
             <div className="bg-white rounded-xl border border-stone-200 shadow-sm p-5 mb-6">
               <h2 className="font-bold text-stone-800 mb-3 flex items-center gap-2"><BarChart2 className="w-4 h-4 text-amber-700" />Revenue Breakdown</h2>
-              <div className="grid grid-cols-3 gap-4 text-center">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
                 <div className="bg-green-50 rounded-xl p-4"><p className="text-xs text-stone-500 mb-1">Delivered</p><p className="text-xl font-bold text-green-700">{formatPrice(deliveredRevenue)}</p></div>
                 <div className="bg-blue-50 rounded-xl p-4"><p className="text-xs text-stone-500 mb-1">In Progress / Shipped</p><p className="text-xl font-bold text-blue-700">{formatPrice(orders.filter(o=>["In Progress","Completed","Shipped"].includes(o.status)).reduce((s,o)=>s+o.total,0))}</p></div>
                 <div className="bg-amber-50 rounded-xl p-4"><p className="text-xs text-stone-500 mb-1">All Orders</p><p className="text-xl font-bold text-amber-700">{formatPrice(totalRevenue)}</p></div>
@@ -662,7 +670,7 @@ export default function AdminPage() {
                   <h2 className="font-bold text-stone-800">Featured Artworks</h2>
                   <button onClick={()=>setTab("artworks")} className="text-sm text-amber-700 hover:underline">Manage all</button>
                 </div>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {artworks.filter(a=>a.featured).slice(0,4).map(a=>(
                     <div key={a.id} className="relative rounded-lg overflow-hidden aspect-square bg-stone-100">
                       <Image src={a.images[0]} alt={a.title} fill className="object-cover" sizes="120px" />

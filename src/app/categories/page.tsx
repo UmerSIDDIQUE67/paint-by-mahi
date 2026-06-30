@@ -3,7 +3,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
 import { ArrowRight } from "lucide-react";
-import { CATEGORIES, ARTWORKS } from "@/lib/data";
+import { CATEGORIES } from "@/lib/data";
+import { readArtworks } from "@/lib/serverData";
 
 export const metadata: Metadata = {
   title: "Art Categories – Browse by Style",
@@ -21,7 +22,9 @@ const CATEGORY_IMAGES: Record<string, string> = {
   "abstract": "https://images.unsplash.com/photo-1541367777708-7905fe3296c0?w=600&q=80",
 };
 
-export default function CategoriesPage() {
+export default async function CategoriesPage() {
+  const artworks = await readArtworks();
+
   return (
     <div>
       <div className="relative bg-stone-900 py-14 overflow-hidden" suppressHydrationWarning>
@@ -51,10 +54,10 @@ export default function CategoriesPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {CATEGORIES.map((cat) => {
-            const artworks = ARTWORKS.filter(
+            const categoryArtworks = artworks.filter(
               (a) => a.category.toLowerCase() === cat.name.toLowerCase()
             );
-            const coverImage = CATEGORY_IMAGES[cat.slug] || artworks[0]?.images[0];
+            const coverImage = CATEGORY_IMAGES[cat.slug] || categoryArtworks[0]?.images[0];
 
             return (
               <Link
@@ -78,7 +81,7 @@ export default function CategoriesPage() {
                   <p className="text-stone-300 text-sm mb-2">{cat.description}</p>
                   <div className="flex items-center justify-between">
                     <span className="text-amber-400 text-xs font-medium">
-                      {artworks.length} artwork{artworks.length !== 1 ? "s" : ""}
+                      {categoryArtworks.length} artwork{categoryArtworks.length !== 1 ? "s" : ""}
                     </span>
                     <span className="flex items-center gap-1 text-white text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity">
                       Browse <ArrowRight className="w-4 h-4" />

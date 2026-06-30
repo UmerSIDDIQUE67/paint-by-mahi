@@ -6,8 +6,9 @@ import { ArrowRight, Brush, Droplets, PenLine, User, Pencil, Layers, Shapes, Sta
 import { Button } from "@/components/ui/button";
 import ArtworkCard from "@/components/artwork/ArtworkCard";
 import ArtistStats from "@/components/ArtistStats";
-import { ARTWORKS, CATEGORIES, REVIEWS } from "@/lib/data";
+import { CATEGORIES, REVIEWS } from "@/lib/data";
 import { formatDate } from "@/lib/utils";
+import { readArtworks } from "@/lib/serverData";
 import type { LucideIcon } from "lucide-react";
 
 const CATEGORY_ICONS: Record<string, LucideIcon> = {
@@ -26,9 +27,11 @@ export const metadata: Metadata = {
     "Original handmade paintings, Islamic calligraphy, custom portraits and canvas art by Mahi. Browse the gallery, order online. Based in Pakistan, shipping worldwide.",
 };
 
-export default function HomePage() {
-  const featuredArtworks = ARTWORKS.filter((a) => a.featured).slice(0, 6);
-  const recentArtworks = [...ARTWORKS].slice(0, 8);
+export default async function HomePage() {
+  const persistedArtworks = await readArtworks();
+  const artworks = persistedArtworks.length ? persistedArtworks : [];
+  const featuredArtworks = artworks.filter((a) => a.featured).slice(0, 6);
+  const recentArtworks = artworks.slice(0, 8);
 
   return (
     <div suppressHydrationWarning>

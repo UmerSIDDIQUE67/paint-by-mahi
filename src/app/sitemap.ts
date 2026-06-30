@@ -1,10 +1,12 @@
 import { MetadataRoute } from "next";
-import { ARTWORKS, CATEGORIES } from "@/lib/data";
+import { CATEGORIES } from "@/lib/data";
+import { readArtworks } from "@/lib/serverData";
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = "https://paintbymahi.com";
+  const artworks = await readArtworks();
 
-  const artworkUrls = ARTWORKS.map((artwork) => ({
+  const artworkUrls = artworks.map((artwork) => ({
     url: `${baseUrl}/artwork/${artwork.id}`,
     lastModified: new Date(artwork.createdAt),
     changeFrequency: "monthly" as const,

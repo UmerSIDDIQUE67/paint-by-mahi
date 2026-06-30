@@ -2,15 +2,18 @@ import React from "react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import ArtworkDetailClient from "./ArtworkDetailClient";
-import { ARTWORKS } from "@/lib/data";
+import { readArtworks } from "@/lib/serverData";
+
+export const dynamic = "force-dynamic";
 
 interface Props {
-  params: Promise<{ id: string }>;
+  params: { id: string };
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { id } = await params;
-  const artwork = ARTWORKS.find((a) => a.id === id);
+  const { id } = params;
+  const artworks = await readArtworks();
+  const artwork = artworks.find((a) => a.id === id);
   if (!artwork) return { title: "Artwork Not Found" };
 
   return {
@@ -24,18 +27,15 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-export async function generateStaticParams() {
-  return ARTWORKS.map((a) => ({ id: a.id }));
-}
-
 export default async function ArtworkPage({ params }: Props) {
   const { id } = await params;
-  const artwork = ARTWORKS.find((a) => a.id === id);
+  const artworks = await readArtworks();
+  const artwork = artworks.find((a) => a.id === id);
   if (!artwork) notFound();
 
-  const related = ARTWORKS.filter(
-    (a) => a.category === artwork.category && a.id !== artwork.id
-  ).slice(0, 4);
+  const related = artworks
+    .filter((a) => a.category === artwork.category && a.id !== artwork.id)
+    .slice(0, 4);
 
   return <ArtworkDetailClient artwork={artwork} related={related} />;
 }
