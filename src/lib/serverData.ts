@@ -5,7 +5,9 @@ import { ARTWORKS, type Artwork } from "@/lib/data";
 import type { ActiveUser } from "@/lib/store";
 import type { Order } from "@/lib/store";
 
-const DATA_DIR = path.join(process.cwd(), "data");
+const DATA_DIR = process.env.VERCEL
+  ? path.join("/tmp", "paint-by-mahi-data")
+  : path.join(process.cwd(), "data");
 const ORDERS_FILE = path.join(DATA_DIR, "orders.json");
 const SETTINGS_FILE = path.join(DATA_DIR, "settings.json");
 const ARTWORKS_FILE = path.join(DATA_DIR, "artworks.json");
