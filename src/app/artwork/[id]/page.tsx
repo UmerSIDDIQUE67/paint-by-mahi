@@ -7,11 +7,11 @@ import { readArtworks } from "@/lib/serverData";
 export const dynamic = "force-dynamic";
 
 interface Props {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { id } = params;
+  const { id } = await params;
   const artworks = await readArtworks();
   const artwork = artworks.find((a) => a.id === id);
   if (!artwork) return { title: "Artwork Not Found" };
